@@ -1,0 +1,19 @@
+{
+  "name": "postman-tests",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test:wallet": "newman run tests/WalletServiceV2.1.postman_collection --reporters cli"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "newman": "^6.2.1"
+  }
+}

@@ -1,0 +1,639 @@
+{
+	"info": {
+		"_postman_id": "e885d071-3f1b-4314-99f5-975519be1749",
+		"name": "WalletServiceV2",
+		"description": "PyWallet",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "43157506",
+		"_collection_link": "https://cloudy-robot-763156.postman.co/workspace/My-Workspace~0c8e3344-d129-4483-8fce-53e0f9e96fa5/collection/43157506-e885d071-3f1b-4314-99f5-975519be1749?action=share&source=collection_link&creator=43157506"
+	},
+	"item": [
+		{
+			"name": "Client Registration",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n   \"Name\": \"TestingZamupay2\", /* Name of up stream system */\r\n    \"Email\" : \"patience.koskey@pycs.co.ke\", /* Email of up stream system */\r\n    \"MobileNumber\" : \"254727405720\", /* Mobile Number of up stream system */\r\n    \"Type\" : 1 /* Type 1 - Register */\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{test_url}}/api/Client",
+					"host": [
+						"{{test_url}}"
+					],
+					"path": [
+						"api",
+						"Client"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Customer Registration",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Get timestamp to ensure uniqueness\r",
+							"const timestamp = Date.now();\r",
+							"\r",
+							"// Generate unique values\r",
+							"const name = `TestUser_${timestamp}`;\r",
+							"const Email = `test_${timestamp}@gmail.com`;\r",
+							"const phone = `07${Math.floor(10000000 + Math.random() * 89999999)}`;\r",
+							"\r",
+							"// Save to environment or global variables\r",
+							"pm.environment.set(\"unique_name\", name);\r",
+							"pm.environment.set(\"unique_email\", Email);\r",
+							"pm.environment.set(\"unique_phone\", phone);\r",
+							"\r",
+							"function generateRandomCustomerId() {\r",
+							"    let id = '';\r",
+							"    // First digit should not be 0\r",
+							"    id += Math.floor(Math.random() * 9) + 1;\r",
+							"    // Add remaining 17 digits\r",
+							"    for (let i = 0; i < 17; i++) {\r",
+							"        id += Math.floor(Math.random() * 10);\r",
+							"    }\r",
+							"    return id;\r",
+							"}\r",
+							"\r",
+							"const customerId = generateRandomCustomerId();\r",
+							"pm.environment.set(\"customer_id\", customerId);\r",
+							"\r",
+							"\r",
+							"\r",
+							"\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Parse the JSON response\r",
+							"const response = pm.response.json();\r",
+							"\r",
+							"// Save APIKey to environment\r",
+							"if (response.APIKey) {\r",
+							"    pm.environment.set(\"api_key\", response.APIKey);\r",
+							"} else {\r",
+							"    console.warn(\"APIKey not found in response\");\r",
+							"}\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"Name\": \"{{unique_name}}\", /*  Name of Customer */\r\n    \"Email\" : \"{{unique_email}}\", /* Email of customer */\r\n    \"MobileNumber\" : \"{{unique_phone}}\", /* Mobile Number of customer */\r\n    \"CustomerId\" : \"{{customer_id}}\", /* Customer Id of customer from upstream system */\r\n    \"Type\" : 1 /* Type 1 - Register, 2 - reset API Key */\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{test_url}}/api/Customer",
+					"host": [
+						"{{test_url}}"
+					],
+					"path": [
+						"api",
+						"Customer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Credit",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//save the STAN in a variable\r",
+							"const response = pm.response.json();\r",
+							"\r",
+							"pm.environment.set(\"stan\", response.SystemTraceAuditNumber);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"CustomerId\": \"{{customer_id}}\",  /* Customer Id of customer from upstream system */\r\n    \"APIKey\": \"{{api_key}}\",  /*  API Key of customer from upstream system */\r\n    \"TransactionType\" :\"2\", /* 1- Debit, 2 - Credit, 4 - Reversal, 5 - Balance Check  */\r\n     \"SystemTraceAuditNumber\" :\"{{$guid}}\", /* System Trace Audit Number */\r\n     \"ChargeType\":1,\r\n    \"Account\" : \"Test\",  /*  Account of customer from upstream system */\r\n    \"AccountDescription\" : \"Principal\",  /*  Account Description of customer from upstream system */\r\n    \"Amount\" : \"5000\", /* Amount */\r\n    \"PrimaryDescription\" : \"testsPrincipal\",  /*  Primary Description of transaction */\r\n    \"SecondaryDescription\" : \"testingPrincipal\", /*  Secondary Description of transaction */\r\n    \"Reference\" : \"Principalcharges\", /*  Reference of transaction */\r\n    \"CallbackUrl\" : \"Greentest\", /*  Callback URL */\r\n    \"ValueDate\" : \"11-03-2024\",/* Value Date of transaction */\r\n    \"ChartOfAccountId\":\"{{chartOf_AccountID}}\",\r\n    \"CustomerAccountId\":\"{{customerAccount_id}}\",\r\n    \"ContraChartOfAccountId\":\"\"\r\n        // \"TransactionModels\":[\r\n        // {\r\n        //  \"ChargeType\":2,\r\n        //  \"Amount\" : \"30\", /* Amount */\r\n        //  \"PrimaryDescription\" : \"tests2\",  /*  Primary Description of transaction */\r\n        //  \"SecondaryDescription\" : \"testing2\", /*  Secondary Description of transaction */\r\n        //  \"Reference\" : \"charges\", /*  Reference of transaction */\r\n        //  \"ContraChartOfAccountId\":\"\",\r\n        //   \"CustomerAccountId\":\"314982675432\",\r\n        //  \"TransactionType\":\"2\",\r\n        //  \"ValueDate\":\"11-03-2024\"\r\n        // },\r\n        // {\r\n        //  \"ChargeType\":2,\r\n        //  \"Amount\" : \"30\", /* Amount */\r\n        //  \"PrimaryDescription\" : \"tests\",  /*  Primary Description of transaction */\r\n        //  \"SecondaryDescription\" : \"testing\", /*  Secondary Description of transaction */\r\n        //  \"Reference\" : \"charges\", /*  Reference of transaction */\r\n        //  \"ContraChartOfAccountId\":\"\",\r\n        //   \"CustomerAccountId\":\"314982675432\",\r\n        //  \"TransactionType\":\"2\",\r\n        //  \"ValueDate\":\"11-03-2024\"\r\n        // }]\r\n    \r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{test_url}}/api/TransactionRequest",
+					"host": [
+						"{{test_url}}"
+					],
+					"path": [
+						"api",
+						"TransactionRequest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Debit Credit",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"CustomerId\": \"{{customer_id}}\",  /* Customer Id of customer from upstream system */\r\n    \"APIKey\": \"{{api_key}}\",  /*  API Key of customer from upstream system */\r\n    \"TransactionType\" :\"9\", /* 1- Debit, 2 - Credit, 4 - Reversal, 5 - Balance Check ,  9 - Debit Credit  */\r\n     \"SystemTraceAuditNumber\" :\"{{$guid}}\", /* System Trace Audit Number */\r\n     \"ChargeType\":1,\r\n    \"Account\" : \"Test\",  /*  Account of customer from upstream system */\r\n    \"AccountDescription\" : \"Principal\",  /*  Account Description of customer from upstream system */\r\n    \"Amount\" : \"1000\", /* Amount */\r\n    \"CreditAmount\": \"1000\",\r\n    \"PrimaryDescription\" : \"testsPrincipal\",  /*  Primary Description of transaction */\r\n    \"SecondaryDescription\" : \"testingPrincipal\", /*  Secondary Description of transaction */\r\n    \"Reference\" : \"Principalcharges\", /*  Reference of transaction */\r\n    \"CallbackUrl\" : \"Greentest\", /*  Callback URL */\r\n    \"ValueDate\" : \"11-03-2024\",/* Value Date of transaction */\r\n    \"ChartOfAccountId\":\"{{chartOf_AccountID}}\",\r\n    \"DebitCustomerAccountId\":\"314982675432767654325\",\r\n    \"CreditCustomerAccountId\":\"314982675432767654323\",\r\n    \"ContraChartOfAccountId\":\"\"\r\n    \r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{test_url}}/api/TransactionRequest",
+					"host": [
+						"{{test_url}}"
+					],
+					"path": [
+						"api",
+						"TransactionRequest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Balance Check",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n     \"CustomerId\": \"{{customer_id}}\",  /* Customer Id of customer from upstream system */\r\n    \"APIKey\": \"{{api_key}}\", /*  API Key of customer from upstream system */\r\n    \"TransactionType\" : 5,/* 1- Debit, 2 - Credit, 4 - Reversal, 5 - Balance Check  */\r\n    \"CustomerAccountId\" : \"{{customerAccount_id}}\" /*  Account of customer from upstream system */\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{test_url}}/api/TransactionRequest",
+					"host": [
+						"{{test_url}}"
+					],
+					"path": [
+						"api",
+						"TransactionRequest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Debit",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"console.log(\"CustomerId: \" + pm.environment.get(\"customer_id\"));\r",
+							"console.log(\"APIKey: \" + pm.environment.get(\"api_key\"));\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//save the STAN in a variable\r",
+							"const response = pm.response.json();\r",
+							"\r",
+							"pm.environment.set(\"DebitTransID\", response.Transaction.SystemTraceAuditNumber);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"CustomerId\": \"{{customer_id}}\",  /* Customer Id of customer from upstream system */\r\n    \"APIKey\": \"{{api_key}}\",  /*  API Key of customer from upstream system */\r\n    \"TransactionType\" :\"1\", /* 1- Debit, 2 - Credit, 4 - Reversal, 5 - Balance Check  */\r\n     \"SystemTraceAuditNumber\" :\"{{$guid}}\", /* System Trace Audit Number */\r\n     \"ChargeType\":1,\r\n    \"Account\" : \"Test\",  /*  Account of customer from upstream system */\r\n    \"AccountDescription\" : \"DebitPrincipal\",  /*  Account Description of customer from upstream system */\r\n    \"Amount\" : \"50\", /* Amount */\r\n    \"PrimaryDescription\" : \"tests\",  /*  Primary Description of transaction */\r\n    \"SecondaryDescription\" : \"testing\", /*  Secondary Description of transaction */\r\n    \"Reference\" : \"debitcharges\", /*  Reference of transaction */\r\n    \"CallbackUrl\" : \"Greentest\", /*  Callback URL */\r\n    \"ValueDate\" : \"11-03-2024\",/* Value Date of transaction */\r\n    \"ChartOfAccountId\":\"{{chartOf_AccountID}}\",\r\n    \"CustomerAccountId\":\"{{customerAccount_id}}\",\r\n    \"ContraChartOfAccountId\":\"\",\r\n    \"CurrencyCode\":404,\r\n     \"TransactionTransferType\": 2 /* 0 - General, 1 - Mobile Wallet Tranfer, 2 - Bank Transfers */ \r\n        // \"TransactionModels\":[\r\n        // {\r\n        //  \"ChargeType\":2,\r\n        //  \"Amount\" : \"30\", /* Amount */\r\n        //  \"PrimaryDescription\" : \"tests\",  /*  Primary Description of transaction */\r\n        //  \"SecondaryDescription\" : \"testing\", /*  Secondary Description of transaction */\r\n        //  \"Reference\" : \"Debitcharges\", /*  Reference of transaction */\r\n        //  \"ContraChartOfAccountId\":\"\",\r\n        //   \"CustomerAccountId\":\"314982675432\",\r\n        //  \"TransactionType\":\"2\",\r\n        //  \"ValueDate\":\"11-03-2024\"\r\n        // }]\r\n    \r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{test_url}}/api/TransactionRequest",
+					"host": [
+						"{{test_url}}"
+					],
+					"path": [
+						"api",
+						"TransactionRequest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Reversal",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": " {\r\n        \"Id\": \"{{DebitTransID}}\", /* Id or Stan of transaction */\r\n         \"CustomerId\": \"{{customer_id}}\",  /* Customer Id of customer from upstream system */\r\n        \"APIKey\": \"{{api_key}}\", /*  API Key of customer from upstream system */\r\n        // \"SystemTraceAuditNumber\": \"\", /* System Trace Audit Number */\r\n        \"TransactionType\": 4, /* 1- Debit, 2 - Credit, 4 - Reversal, 5 - Balance Check  */\r\n        // \"Narration\" : \"Wrong Account\", /* Reason of reversal */\r\n        // \"CallbackUrl\" : \"https://bayesviachui.com\", /*  Callback URL */\r\n        \"ValueDate\" : \"15-03-2024\"/* Value Date of transaction */\r\n        //  \"Type\" : 1, /* Type 1 - Reset using Id, Type 2 -  Reset using STAN */\r\n        // \"ChartOfAccountId\":\"e0f5e07d-2f9c-4ed4-8d49-9e1bf19ea468\",\r\n        // \"CustomerAccountId\":\"929f5cf5-f7eb-4c1e-95af-01b5e368b054\",\r\n        // \"ContraChartOfAccountId\":\"\"        \r\n    }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{test_url}}/api/TransactionRequest",
+					"host": [
+						"{{test_url}}"
+					],
+					"path": [
+						"api",
+						"TransactionRequest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "AccountStatement",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "p_F8i3!E",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "Feb2025",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"CustomerId\": \"{{customer_id}}\",  /* Customer Id of customer from upstream system */\r\n    \"APIKey\": \"{{api_key}}\", /*  API Key of customer from upstream system */\r\n    \"CustomerAccountId\" : \"{{customerAccount_id}}\",  /*  Account of customer from upstream system */\r\n    \"StartDate\" : \"2021-01-01\", /* From date of transaction */\r\n    \"EndDate\" : \"2025-06-19\", /* To date of transaction */\r\n    \"PageSize\" : 100, /* Number of records per pae */\r\n    \"StartIndex\" : 0, /* Page index*/\r\n    \"SearchString\" :\"\"  \r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{test_url}}/api/AccountStatement",
+					"host": [
+						"{{test_url}}"
+					],
+					"path": [
+						"api",
+						"AccountStatement"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Reset API Key",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "5t@$r$3D",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "testngzamupay_localdavid",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"CustomerId\" : \"f36e57f7-8fb6-ed11-ad49-0ee00e897f52\", /* Customer Id of customer from upstream system */\r\n    \"Type\" : 2 /* Type 1 - Register, Type 2 - Reset API Key */\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{test_url}}/api/Customer",
+					"host": [
+						"{{test_url}}"
+					],
+					"path": [
+						"api",
+						"Customer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Query Customer",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.test(\"Customer retrieved successfully\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"    const jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.CustomerId).to.eql(pm.environment.get(\"customer_id\"));\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{test_url}}/api/Customer/?Id={{customerId}}",
+					"host": [
+						"{{test_url}}"
+					],
+					"path": [
+						"api",
+						"Customer",
+						""
+					],
+					"query": [
+						{
+							"key": "Id",
+							"value": "{{customerId}}",
+							"description": " Customer Id of customer from upstream system "
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Query Transaction Status",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{test_url}}/api/TransactionRequest?customerId={{customer_id}}&stan={{DebitTransID}}",
+					"host": [
+						"{{test_url}}"
+					],
+					"path": [
+						"api",
+						"TransactionRequest"
+					],
+					"query": [
+						{
+							"key": "customerId",
+							"value": "{{customer_id}}",
+							"description": "customerId from upstream system"
+						},
+						{
+							"key": "stan",
+							"value": "{{DebitTransID}}",
+							"description": "system trace audit number"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Sync Chart Of Account",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"TransactionType\": 6,\r\n  \"ChartOfAccounts\": [\r\n    {\r\n      \"ChartOfAccountId\": \"93362209-d4e2-ee11-a9f3-975551a3e321\",\r\n      \"ParentId\": null,\r\n      \"AccountType\": 1000000,\r\n      \"AccountCategory\": 4097,\r\n      \"AccountCode\": 1000001,\r\n      \"AccountName\": \"Wapi Testing\"\r\n    }\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{test_url}}/api/AccountManagement",
+					"host": [
+						"{{test_url}}"
+					],
+					"path": [
+						"api",
+						"AccountManagement"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Sync Customer Account",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"function generateRandomCustomerAccountId() {\r",
+							"    let id = '';\r",
+							"    id += Math.floor(Math.random() * 9) + 1;\r",
+							"    for (let i = 0; i < 17; i++) {\r",
+							"        id += Math.floor(Math.random() * 10);\r",
+							"    }\r",
+							"    return id;\r",
+							"}\r",
+							"\r",
+							"const customerAccountId = generateRandomCustomerAccountId();\r",
+							"pm.environment.set(\"customerAccount_id\", customerAccountId);\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//saving the Chart of Accounts to the environment variable\r",
+							"const response = pm.response.json();\r",
+							"\r",
+							"// Save the APIKey from the response\r",
+							"pm.environment.set(\"customer_AccountID\", response.Id);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"TransactionType\": 8,\r\n     \"CustomerId\" : \"{{customer_id}}\",\r\n     \"APIKey\":\"{{api_key}}\",\r\n    \"CustomerAccounts\":\r\n    [\r\n    {\r\n     \"CustomerAccountId\":\"{{customerAccount_id}}\",\r\n     \"ProductCode\" : 0,\r\n     \"TargetProductId\" : \"9876\",\r\n     \"TargetProductCode\":3,\r\n     \"Status\" : 0,\r\n     \"CurrencyCode\":404,\r\n     \"TransactionTransferType\": 2 /* 0 - General, 1 - Mobile Wallet Tranfer, 2 - Bank Transfers */ \r\n    }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{test_url}}/api/AccountManagement",
+					"host": [
+						"{{test_url}}"
+					],
+					"path": [
+						"api",
+						"AccountManagement"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "$nX0p9NK",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "testingcache",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "test_url",
+			"value": " http://54.224.92.175:5010",
+			"type": "string"
+		}
+	]
+}
